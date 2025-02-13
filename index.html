@@ -1,15 +1,13 @@
 <!DOCTYPE html>
     <head>
         <meta charset = utf-8>
-
-        <script async src = 'https://www.googletagmanager.com/gtag/js?id=G-2MDQ9F697V'></script>
         <script src = /js/analytics.js></script>
 
         <title>Man Generation</title>
 
         <style>
             body {
-                background: #050;
+                background: #040;
                 margin: 0;
                 overflow: hidden;
             }
@@ -25,9 +23,10 @@
             let scale = cw = ch = 0
 
             class Man {
-                constructor(x, y) {
+                constructor(x, y, lonely = false) {
                     this.x = x
                     this.y = y
+                    this.lonely = lonely
 
                     this.body_h = random(scale / 2, scale * 2)
 
@@ -44,8 +43,9 @@
                     this.color = rgb(
                         random(!color?150:0,!color?255:150),
                         random(color==1?150:0,color==1?255:150),
-                        random(color==2?150:0,color==2?255:150)
-                    )
+                        random(color==2?150:0,color==2?255:150))
+
+                    if (lonely) this.color = rgb(30,30,30)
 
                     this.eyes = (this.w > this.body_h ? this.body_h / 3 : this.w / 3)
                     this.pupils = this.w > this.body_h ? this.body_h / 7 : this.w / 7
@@ -184,7 +184,7 @@
                     }
                     reactions()
                     const movement = _ => {
-                        this.move_timer --
+                        if (!this.lonely) this.move_timer --
 
                         if (this.move_timer == 0) {
                             const value = random(0, 3)
@@ -261,7 +261,10 @@
 
                 men = []
 
-                for (let i = 0; i < people; i ++) men.push(new Man(-scale / 2, ch / 2 + Math.sin(i*i) * ch / 2))
+                for (let i = 0; i < people; i ++) {
+                    if (i) men.push(new Man(-scale / 2, ch / 2 + Math.sin(i*i) * ch / 2))
+                    else men.push(new Man(cw / 2, ch / 2, true))
+                }
                 men.sort((a, b) => (a.y + a.body_h / 2 + a.leg) - (b.y + b.body_h / 2 + b.leg))
             }
 
@@ -276,12 +279,37 @@
                 ctx.clearRect(0, 0, c.width, c.height)
                 time += .2
 
+                const size = (c.width + c.height) / 5
+                const grad2 = ctx.createRadialGradient(
+                    c.width / 2,
+                    c.height / 2,
+                    0,
+                    c.width / 2,
+                    c.height / 2,
+                    size)
+                grad2.addColorStop(0, '#0000')
+                grad2.addColorStop(1, '#666')
+                ctx.fillStyle = grad2
+                ctx.fillRect(0, 0, c.width, c.height)
+
                 men.forEach((man, idx) => {
                     man.update()
 
                     if (man.x > cw + scale / 2) man.x = -scale / 2
                     if (man.x < -scale / 2) man.x = cw + scale / 2
                 })
+
+                const grad = ctx.createRadialGradient(
+                    c.width / 2,
+                    c.height / 2,
+                    size * .3,
+                    c.width / 2,
+                    c.height / 2,
+                    size)
+                grad.addColorStop(0, '#0000')
+                grad.addColorStop(1, '#000b')
+                ctx.fillStyle = grad
+                ctx.fillRect(0, 0, c.width, c.height)
 
                 requestAnimationFrame(loop)
             }
